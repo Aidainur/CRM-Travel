@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Travel</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0b2e22; --paper:#eef8f2; --card:#ffffff;
+  --teal:#0e7a4f; --teal-2:#12965f; --sand:#2fb673; --sand-2:#8fdcb4;
+  --line:#d3ecdd; --muted:#5f8f79; --danger:#c1442e;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --ink:#d9f3e5; --paper:#0c211a; --card:#123024; --line:#1e4636; --muted:#7fb99f; }
+}
+:root[data-theme="dark"]{ --ink:#d9f3e5; --paper:#0c211a; --card:#123024; --line:#1e4636; --muted:#7fb99f; }
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,var(--paper) 0%,var(--card) 100%);color:var(--ink);font-family:'Inter',sans-serif;min-height:100%}
+h1,h2,h3{font-family:'Fraunces',serif;margin:0}
+.app{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
+header.top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px;flex-wrap:wrap;gap:8px}
+header.top h1{font-size:28px;font-weight:700}
+header.top span{color:var(--sand);font-style:italic}
+.sub{color:var(--muted);font-size:14px}
+nav{display:flex;gap:6px;margin-bottom:24px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{background:none;border:none;padding:10px 16px;font-family:'Inter';font-size:14px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+nav button.active{color:var(--teal-2);border-color:var(--sand);font-weight:600}
+:root[data-theme="dark"] nav button.active, :root:not([data-theme="light"]) nav button.active{color:var(--sand-2)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:28px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stat .n{font-family:'Fraunces';font-size:26px}
+.stat .l{color:var(--muted);font-size:13px;margin-top:2px}
+.panel{display:none}
+.panel.active{display:block}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.toolbar h2{font-size:20px}
+button.primary{background:var(--teal);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Inter';font-weight:500}
+button.primary:hover{background:var(--teal-2)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:11px 14px;font-size:14px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+.wrap-table{overflow-x:auto}
+.badge{padding:3px 10px;border-radius:20px;font-size:12px;display:inline-block}
+.badge.new{background:#dbe9e3;color:#1f5c47}
+.badge.progress{background:#fbe6c9;color:#8a5a17}
+.badge.won{background:#d6e7d1;color:#2f6b2a}
+.badge.lost{background:#f0d9d3;color:var(--danger)}
+:root[data-theme="dark"] .badge, :root:not([data-theme="light"]) .badge{filter:brightness(1.3)}
+.del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px}
+.empty{color:var(--muted);padding:30px;text-align:center;font-size:14px}
+dialog{border:none;border-radius:12px;padding:0;background:var(--card);color:var(--ink);width:min(420px,90vw)}
+dialog::backdrop{background:rgba(15,30,29,.45)}
+.dform{padding:22px}
+.dform h3{margin-bottom:16px}
+.dform label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+.dform input,.dform select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:'Inter';font-size:14px;background:var(--paper);color:var(--ink)}
+.dform .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.dform button[type=button]{background:none;border:1px solid var(--line);padding:8px 14px;border-radius:7px;cursor:pointer;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div><h1>Travel <span>CRM</span></h1><div class="sub">CRM для управления турагентством</div></div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <nav>
+    <button class="active" data-p="clients">Клиенты</button>
+    <button data-p="bookings">Бронирования</button>
+    <button data-p="leads">Лиды</button>
+    <button data-p="leaders">Лидеры</button>
+    <button data-p="team">Команда</button>
+  </nav>
+
+  <section class="panel" id="p-leaders">
+    <div class="toolbar"><h2>Лидеры</h2></div>
+    <div class="sub" style="margin-bottom:12px">Клиенты с наибольшим числом бонусных баллов</div>
+    <div class="wrap-table"><table id="t-leaders"></table></div>
+  </section>
+
+  <section class="panel" id="p-team">
+    <div class="toolbar"><h2>Команда</h2><button class="primary" onclick="openDlg('team')">+ Добавить сотрудника</button></div>
+    <div class="wrap-table"><table id="t-team"></table></div>
+  </section>
+
+  <section class="panel active" id="p-clients">
+    <div class="toolbar"><h2>Клиенты</h2><button class="primary" onclick="openDlg('client')">+ Добавить клиента</button></div>
+    <div class="wrap-table"><table id="t-clients"></table></div>
+  </section>
+
+  <section class="panel" id="p-bookings">
+    <div class="toolbar"><h2>Бронирования</h2><button class="primary" onclick="openDlg('booking')">+ Новое бронирование</button></div>
+    <div class="wrap-table"><table id="t-bookings"></table></div>
+  </section>
+
+  <section class="panel" id="p-leads">
+    <div class="toolbar"><h2>Лиды</h2><button class="primary" onclick="openDlg('lead')">+ Добавить лида</button></div>
+    <div class="wrap-table"><table id="t-leads"></table></div>
+  </section>
+</div>
+
+<dialog id="dlg-client">
+  <form class="dform" method="dialog" onsubmit="saveClient(event)">
+    <h3 id="c_title">Новый клиент</h3>
+    <input type="hidden" id="c_id">
+    <label>Имя</label><input required id="c_name">
+    <label>Телефон</label><input id="c_phone">
+    <label>Email</label><input id="c_email" type="email">
+    <label>Адрес</label><input id="c_address" placeholder="Город, улица, дом">
+    <label>Бонусы (баллы)</label><input id="c_bonus" type="number" min="0" step="1" value="0">
+    <label>Заметка</label><input id="c_note" placeholder="напр. любит море, вегетарианец">
+    <div class="actions"><button type="button" onclick="dlgClose('dlg-client')">Отмена</button><button class="primary" type="submit">Сохранить</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-booking">
+  <form class="dform" method="dialog" onsubmit="saveBooking(event)">
+    <h3>Новое бронирование</h3>
+    <label>Клиент</label><input required id="b_client" placeholder="Имя клиента">
+    <label>Направление</label><input required id="b_dest" placeholder="напр. Бали">
+    <label>Дата вылета</label><input id="b_date" type="date">
+    <label>Сумма, $</label><input id="b_amount" type="number" min="0">
+    <label>Статус</label>
+    <select id="b_status"><option value="new">Новое</option><option value="progress">В процессе</option><option value="won">Оплачено</option><option value="lost">Отменено</option></select>
+    <div class="actions"><button type="button" onclick="dlgClose('dlg-booking')">Отмена</button><button class="primary" type="submit">Сохранить</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-lead">
+  <form class="dform" method="dialog" onsubmit="saveLead(event)">
+    <h3>Новый лид</h3>
+    <label>Имя</label><input required id="l_name">
+    <label>Интерес</label><input id="l_interest" placeholder="напр. Тур в Турцию">
+    <label>Источник</label><input id="l_source" placeholder="напр. Instagram">
+    <label>Статус</label>
+    <select id="l_status"><option value="new">Новый</option><option value="progress">В работе</option><option value="won">Конвертирован</option><option value="lost">Потерян</option></select>
+    <div class="actions"><button type="button" onclick="dlgClose('dlg-lead')">Отмена</button><button class="primary" type="submit">Сохранить</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-team">
+  <form class="dform" method="dialog" onsubmit="saveTeam(event)">
+    <h3>Новый сотрудник</h3>
+    <label>Имя</label><input required id="tm_name">
+    <label>Роль</label><input id="tm_role" placeholder="напр. Менеджер по продажам">
+    <label>Телефон</label><input id="tm_phone">
+    <label>Сделок закрыто</label><input id="tm_deals" type="number" min="0" step="1" value="0">
+    <div class="actions"><button type="button" onclick="dlgClose('dlg-team')">Отмена</button><button class="primary" type="submit">Сохранить</button></div>
+  </form>
+</dialog>
+
+<script>
+let data = {clients:[], bookings:[], leads:[], team:[]};
+const KEY = 'incryses_crm_data';
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw) data = JSON.parse(raw);
+    else seed();
+  }catch(e){ console.error('load failed', e); seed(); }
+}
+function seed(){
+  data = {
+    clients:[
+      {id:uid(), name:'Анна Соколова', phone:'+996 555 111 222', email:'anna.s@mail.com', address:'Бишкек, ул. Чуй 45', bonus:150, note:'любит пляжный отдых'},
+      {id:uid(), name:'Марат Иманалиев', phone:'+996 700 333 444', email:'marat.i@mail.com', address:'Бишкек, ул. Киевская 12', bonus:80, note:'предпочитает горы'},
+      {id:uid(), name:'Дарья Ким', phone:'+996 555 777 888', email:'daria.k@mail.com', address:'Ош, ул. Ленина 3', bonus:220, note:'постоянный клиент'}
+    ],
+    bookings:[
+      {id:uid(), client:'Анна Соколова', dest:'Бали', date:'2026-11-05', amount:1450, status:'won'},
+      {id:uid(), client:'Марат Иманалиев', dest:'Грузия, Тбилиси', date:'2026-10-12', amount:620, status:'progress'},
+      {id:uid(), client:'Дарья Ким', dest:'ОАЭ, Дубай', date:'2026-12-20', amount:1980, status:'new'}
+    ],
+    leads:[
+      {id:uid(), name:'Тимур Асанов', interest:'Тур в Египет', source:'Instagram', status:'new'},
+      {id:uid(), name:'Гульнара Бекова', interest:'Тур в Турцию', source:'Сайт', status:'progress'},
+      {id:uid(), name:'Виктор Ли', interest:'Горнолыжный тур', source:'Рекомендация', status:'won'}
+    ],
+    team:[
+      {id:uid(), name:'Эльвира Джумабекова', role:'Менеджер по продажам', phone:'+996 555 222 333', deals:14},
+      {id:uid(), name:'Азамат Токтогулов', role:'Менеджер по продажам', phone:'+996 700 444 555', deals:9},
+      {id:uid(), name:'Нурзат Байгазиева', role:'Координатор туров', phone:'+996 555 666 777', deals:6}
+    ]
+  };
+  save();
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){ console.error('save failed', e); }
+}
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+const statusLabel = {new:'Новое',progress:'В процессе',won:'Успех',lost:'Отменено'};
+
+function switchPanel(p){
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  document.getElementById('p-'+p).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.p===p));
+}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>switchPanel(b.dataset.p)));
+
+function openDlg(type){
+  if(type==='client'){
+    c_title.textContent='Новый клиент'; c_id.value=''; c_name.value=''; c_phone.value=''; c_email.value=''; c_address.value=''; c_bonus.value=0; c_note.value='';
+  }
+  document.getElementById('dlg-'+type).showModal();
+}
+function saveTeam(e){
+  data.team.push({id:uid(), name:tm_name.value, role:tm_role.value, phone:tm_phone.value, deals:Number(tm_deals.value)||0});
+  save(); render(); e.target.reset(); dlgClose('dlg-team');
+}
+function editClient(id){
+  const c = data.clients.find(x=>x.id===id);
+  if(!c) return;
+  c_title.textContent='Редактировать клиента';
+  c_id.value=c.id; c_name.value=c.name; c_phone.value=c.phone||''; c_email.value=c.email||''; c_address.value=c.address||''; c_bonus.value=c.bonus||0; c_note.value=c.note||'';
+  document.getElementById('dlg-client').showModal();
+}
+function dlgClose(id){ document.getElementById(id).close(); }
+
+function saveClient(e){
+  const rec = {id:c_id.value||uid(), name:c_name.value, phone:c_phone.value, email:c_email.value, address:c_address.value, bonus:Number(c_bonus.value)||0, note:c_note.value};
+  const idx = data.clients.findIndex(x=>x.id===rec.id);
+  if(idx>-1) data.clients[idx]=rec; else data.clients.push(rec);
+  save(); render(); e.target.reset(); dlgClose('dlg-client');
+}
+function saveBooking(e){
+  data.bookings.push({id:uid(), client:b_client.value, dest:b_dest.value, date:b_date.value, amount:Number(b_amount.value)||0, status:b_status.value});
+  save(); render(); e.target.reset(); dlgClose('dlg-booking');
+}
+function saveLead(e){
+  data.leads.push({id:uid(), name:l_name.value, interest:l_interest.value, source:l_source.value, status:l_status.value});
+  save(); render(); e.target.reset(); dlgClose('dlg-lead');
+}
+function removeItem(list,id){
+  data[list] = data[list].filter(x=>x.id!==id);
+  save(); render();
+}
+
+function render(){
+  // stats
+  const activeBookings = data.bookings.filter(b=>b.status==='new'||b.status==='progress').length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n">${data.clients.length}</div><div class="l">Клиентов</div></div>
+    <div class="stat"><div class="n">${activeBookings}</div><div class="l">Активных броней</div></div>
+    <div class="stat"><div class="n">${data.leads.length}</div><div class="l">Лидов</div></div>
+  `;
+
+  // clients
+  const tc = document.getElementById('t-clients');
+  tc.innerHTML = data.clients.length ? `<tr><th>Имя</th><th>Телефон</th><th>Email</th><th>Адрес</th><th>Бонусы</th><th>Заметка</th><th></th></tr>` +
+    data.clients.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)||'—'}</td><td>${esc(c.email)||'—'}</td><td>${esc(c.address)||'—'}</td><td>${c.bonus||0}</td><td>${esc(c.note)||'—'}</td><td><button class="del" onclick="editClient('${c.id}')" style="color:var(--teal-2)">Изм.</button> <button class="del" onclick="removeItem('clients','${c.id}')">Удалить</button></td></tr>`).join('')
+    : `<tr><td class="empty">Пока нет клиентов — добавьте первого.</td></tr>`;
+
+  // bookings
+  const tb = document.getElementById('t-bookings');
+  tb.innerHTML = data.bookings.length ? `<tr><th>Клиент</th><th>Направление</th><th>Дата</th><th>Сумма</th><th>Статус</th><th></th></tr>` +
+    data.bookings.map(b=>`<tr><td>${esc(b.client)}</td><td>${esc(b.dest)}</td><td>${b.date||'—'}</td><td>$${(b.amount||0).toLocaleString()}</td><td><span class="badge ${b.status}">${statusLabel[b.status]}</span></td><td><button class="del" onclick="removeItem('bookings','${b.id}')">Удалить</button></td></tr>`).join('')
+    : `<tr><td class="empty">Бронирований пока нет.</td></tr>`;
+
+  // leads
+  const tl = document.getElementById('t-leads');
+  tl.innerHTML = data.leads.length ? `<tr><th>Имя</th><th>Интерес</th><th>Источник</th><th>Статус</th><th></th></tr>` +
+    data.leads.map(l=>`<tr><td>${esc(l.name)}</td><td>${esc(l.interest)||'—'}</td><td>${esc(l.source)||'—'}</td><td><span class="badge ${l.status}">${statusLabel[l.status]}</span></td><td><button class="del" onclick="removeItem('leads','${l.id}')">Удалить</button></td></tr>`).join('')
+    : `<tr><td class="empty">Лидов пока нет.</td></tr>`;
+
+  // leaders (top clients by bonus points)
+  const tld = document.getElementById('t-leaders');
+  const topClients = [...data.clients].sort((a,b)=>(b.bonus||0)-(a.bonus||0));
+  tld.innerHTML = topClients.length ? `<tr><th>#</th><th>Клиент</th><th>Бонусы</th><th>Email</th></tr>` +
+    topClients.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.bonus||0}</td><td>${esc(c.email)||'—'}</td></tr>`).join('')
+    : `<tr><td class="empty">Пока нет клиентов для рейтинга.</td></tr>`;
+
+  // team
+  const tt = document.getElementById('t-team');
+  tt.innerHTML = data.team.length ? `<tr><th>Имя</th><th>Роль</th><th>Телефон</th><th>Сделок</th><th></th></tr>` +
+    data.team.map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.role)||'—'}</td><td>${esc(t.phone)||'—'}</td><td>${t.deals||0}</td><td><button class="del" onclick="removeItem('team','${t.id}')">Удалить</button></td></tr>`).join('')
+    : `<tr><td class="empty">В команде пока никого нет.</td></tr>`;
+}
+function esc(s){ return (s||'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+load();
+render();
+</script>
+</body>
+</html>
